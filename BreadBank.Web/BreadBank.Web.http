@@ -1,0 +1,6 @@
+@BreadBank.Web_HostAddress = http://localhost:5119
+
+GET {{BreadBank.Web_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
