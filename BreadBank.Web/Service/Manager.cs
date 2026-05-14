@@ -170,5 +170,22 @@ namespace BreadBank.Web.Service
 			}).ToList();
 			return historyDto;
 		}
+
+		public async Task ChangePincode(string mail, string newPincode)
+		{
+			var acc = await _repository.GetByMail(mail);
+			if (acc == null)
+				throw new Exception("Аккаунт не найден");
+			if (string.IsNullOrEmpty(newPincode) || newPincode.Length != 4 || !newPincode.All(char.IsDigit))
+				throw new Exception("Неверный формат. Пинкод должен состоять из 4 цифр.");
+			if (acc.IsBanned)
+				throw new Exception("Ваш аккаунт заблокирован! Сначала разблокируйте доступ к нему.");
+			if (BCrypt.Net.BCrypt.Verify(newPincode, acc.Pincode))
+				throw new Exception("Новый пинкод совпадает со старым, проверьте введенные данные.");
+			string hashedPincode = BCrypt.Net.BCrypt.HashPassword(newPincode);
+			acc.Pincode = hashedPincode;
+			acc.FailedAttempts = 0;
+			await _repository.Update(acc);
+		}
 	}
 }

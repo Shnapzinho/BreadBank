@@ -98,24 +98,32 @@
 				</div>
 
 				<!-- Кнопки действий -->
-				<div class="grid grid-cols-3 gap-4">
+				<div class="grid grid-cols-4 gap-2">
+					<!-- Изменили на 4 колонки и уменьшили gap -->
 					<button onclick="action('deposit')" class="flex flex-col items-center gap-3">
-						<div class="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 btn-hover border border-emerald-500/20">
-							<i class="fas fa-arrow-down"></i>
+						<div class="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 btn-hover border border-emerald-500/20">
+							<i class="fas fa-arrow-down text-sm"></i>
 						</div>
-						<span class="text-[10px] uppercase font-bold text-slate-400">Ввод</span>
+						<span class="text-[9px] uppercase font-bold text-slate-400">Ввод</span>
 					</button>
 					<button onclick="transfer()" class="flex flex-col items-center gap-3">
-						<div class="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500 btn-hover border border-blue-500/20">
-							<i class="fas fa-random"></i>
+						<div class="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500 btn-hover border border-blue-500/20">
+							<i class="fas fa-random text-sm"></i>
 						</div>
-						<span class="text-[10px] uppercase font-bold text-slate-400">Перевод</span>
+						<span class="text-[9px] uppercase font-bold text-slate-400">Перевод</span>
 					</button>
 					<button onclick="action('withdraw')" class="flex flex-col items-center gap-3">
-						<div class="w-14 h-14 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-500 btn-hover border border-rose-500/20">
-							<i class="fas fa-arrow-up"></i>
+						<div class="w-12 h-12 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-500 btn-hover border border-rose-500/20">
+							<i class="fas fa-arrow-up text-sm"></i>
 						</div>
-						<span class="text-[10px] uppercase font-bold text-slate-400">Вывод</span>
+						<span class="text-[9px] uppercase font-bold text-slate-400">Вывод</span>
+					</button>
+					<!-- НОВАЯ КНОПКА -->
+					<button onclick="changePin()" class="flex flex-col items-center gap-3">
+						<div class="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 btn-hover border border-amber-500/20">
+							<i class="fas fa-key text-sm"></i>
+						</div>
+						<span class="text-[9px] uppercase font-bold text-slate-400">ПИН</span>
 					</button>
 				</div>
 
@@ -283,6 +291,37 @@
 				if (res.ok) showStatus("Доступ восстановлен");
 				else showStatus(await getErrorMessage(res), true);
 			} catch (e) { showStatus("Ошибка сети", true); }
+		}
+
+		async function changePin() {
+			const newPin = prompt("Введите новый 4-значный пин-код (только цифры):");
+
+			// Валидация на стороне клиента
+			if (!newPin) return;
+			if (newPin.length !== 4 || isNaN(newPin)) {
+				showStatus("Пин-код должен состоять из 4 цифр", true);
+				return;
+			}
+
+			const token = localStorage.getItem('bank_token');
+			try {
+				const res = await fetch(`${API_URL}/change-pin`, {
+					method: 'POST',
+					headers: {
+						'Authorization': `Bearer ${token}`,
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({ newPin: newPin })
+				});
+
+				if (res.ok) {
+					showStatus("Пин-код успешно изменен");
+				} else {
+					showStatus(await getErrorMessage(res), true);
+				}
+			} catch (e) {
+				showStatus("Ошибка сети", true);
+			}
 		}
 
 		function logout() {
