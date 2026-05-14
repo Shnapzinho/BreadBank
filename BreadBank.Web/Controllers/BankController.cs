@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using BreadBank.Web.Service;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace BreadBank.Web.Controllers
 {
@@ -7,113 +9,76 @@ namespace BreadBank.Web.Controllers
 	public class BankController : ControllerBase
 	{
 		private readonly Manager _manager;
-		private readonly Repository _repository;
+
 
 		public BankController(Manager manager, Repository repository)
 		{
 			_manager = manager;
-			_repository = repository;
 		}
 
 		[HttpPost("register")]
-		public IActionResult Register([FromQuery] string mail, [FromQuery] string pin)
+		public async Task<IActionResult> Register([FromQuery] string mail, [FromQuery] string pin)
 		{
-			try
-			{
-				var account = _manager.Registration(mail, pin);
-				return Ok(account);
-			}
-			catch (Exception ex)
-			{
-				return BadRequest(ex.Message);
-			}
+			var accountDto = await _manager.RegistrationAsync(mail, pin);
+			return Ok(accountDto);
+		}
+
+		[HttpPost("login")]
+		public async Task<IActionResult> Login([FromQuery] string mail, [FromQuery] string pin)
+		{
+			var token = await _manager.LoginAsync(mail, pin);
+			return Ok(new { Token = token });
 		}
 
 		[HttpGet("balance")]
-		public IActionResult GetBalance([FromQuery] string mail, [FromQuery] string pin)
+		[Authorize]
+		public async Task<IActionResult> GetBalance()
 		{
-			try
-			{
-				var acc = _repository.GetByMail(mail);
-				if (acc == null)
-					return NotFound("Аккаунт не найден.");
-				var balance = _manager.CheckBalance(acc, pin);
-				return Ok(new { CurrentBalance = balance });
-			}
-			catch (Exception ex)
-			{
-				return BadRequest(ex.Message);
-			}
+			var mail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+			var balance = await _manager.CheckBalanceAsync(mail);
+			return Ok(new { CurrentBalance = balance });
 		}
 		[HttpPost("deposit")]
-		public IActionResult Deposit([FromQuery] string mail, [FromQuery] string pin, [FromQuery] int amount)
+		[Authorize]
+		public async Task<IActionResult> Deposit([FromQuery] int amount)
 		{
-			try
-			{
-				var acc = _repository.GetByMail(mail);
-				if (acc == null)
-					return NotFound("Аккаунт не найден");
-				_manager.Deposit(acc, amount, pin);
-				return Ok($"Счет пополнен. Новый баланс: {acc.balance}");
-			}
-			catch (Exception ex)
-			{
-				return BadRequest(ex.Message);
-			}
+			var mail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+			await _manager.DepositAsync(mail, amount);
+			return Ok($"Счет пополнен.");
 		}
 
 		[HttpPost("withdraw")]
-		public IActionResult Withdraw([FromQuery] string mail, [FromQuery] string pin, [FromQuery] int amount)
+		[Authorize]
+		public async Task<IActionResult> Withdraw([FromQuery] int amount)
 		{
-			try
-			{
-				var acc = _repository.GetByMail(mail);
-				if (acc == null)
-					return NotFound("Аккаунт не найден");
-				_manager.Withdraw(acc, amount, pin);
-				return Ok($"Деньги сняты. Новый баланс: {acc.balance}");
-			}
-			catch (Exception ex)
-			{
-				return BadRequest(ex.Message);
-			}
+			var mail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+			await _manager.WithdrawAsync(mail, amount);
+			return Ok($"Деньги сняты.");
 		}
 
 		[HttpPost("unban")]
-		public IActionResult Unban([FromQuery] string mail, [FromQuery] string pin)
+		public async Task<IActionResult> Unban([FromQuery] string mail, [FromQuery] string pin)
 		{
-			try
-			{
-				var acc = _repository.GetByMail(mail);
-				if (acc == null)
-					return NotFound("Аккаунт не найден");
-				_manager.Unban(acc, pin);
-				return Ok("Аккаунт успешно разблокирован");
-			}
-			catch (Exception ex)
-			{
-				return BadRequest(ex.Message);
-			}
+			await _manager.UnbanAsync(mail, pin);
+			return Ok("Аккаунт успешно разблокирован");
 		}
 
 		[HttpPost("transfer")]
-		public IActionResult Transfer([FromQuery] string mail, [FromQuery] string targetMail, [FromQuery] string pin, [FromQuery] int amount)
+		[Authorize]
+		public async Task<IActionResult> Transfer([FromQuery] string targetMail, [FromQuery] int amount)
 		{
-			try
-			{
-				var sender = _repository.GetByMail(mail);
-				if (sender == null)
-					return NotFound("Аккаунт не найден.");
-				var receiver = _repository.GetByMail(targetMail);
-				if (receiver == null)
-					return NotFound("Аккаунт не найден.");
-				_manager.Transfer(receiver, sender, pin, amount);
-				return Ok($"Вы успешно перевели {amount} на аккаунт {targetMail}");
-			}
-			catch (Exception ex)
-			{
-				return BadRequest(ex.Message);
-			}
+			var mail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+			await _manager.TransferAsync(targetMail, mail, amount);
+			return Ok($"Вы успешно перевели {amount} на аккаунт {targetMail}");
 		}
-	} 
+
+		[HttpGet("history")]
+		public async Task <IActionResult> getHistory()
+		{
+			var mail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+			var historyDto = await _manager.GetHistoryAsync(mail);
+			return Ok(historyDto);
+		}
+
+	}
 }
