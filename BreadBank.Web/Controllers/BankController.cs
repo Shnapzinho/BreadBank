@@ -1,6 +1,7 @@
 ﻿using BreadBank.Web.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using BreadBank.Web.Repositories;
 
 namespace BreadBank.Web.Controllers
 {

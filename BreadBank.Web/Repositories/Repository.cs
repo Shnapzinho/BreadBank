@@ -1,7 +1,8 @@
 ﻿using BreadBank.Web.Entity;
 using Microsoft.EntityFrameworkCore;
+using BreadBank.Web.Config;
 
-namespace BreadBank.Web.Repository
+namespace BreadBank.Web.Repositories
 {
 	public class Repository
 	{

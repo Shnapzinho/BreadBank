@@ -5,6 +5,7 @@ using System.Text;
 using BreadBank.Web.DTOs;
 using BCrypt.Net;
 using BreadBank.Web.Entity;
+using BreadBank.Web.Repositories;
 
 namespace BreadBank.Web.Service
 {

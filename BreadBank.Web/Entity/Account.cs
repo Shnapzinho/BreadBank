@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using BreadBank.Web.Entity;
 
 namespace BreadBank.Web
 {

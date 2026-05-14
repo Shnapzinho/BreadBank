@@ -1,5 +1,5 @@
 using BreadBank.Web.Config;
-using BreadBank.Web.Repository;
+using BreadBank.Web.Repositories;
 using BreadBank.Web.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
